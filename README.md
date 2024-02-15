@@ -1,24 +1,28 @@
 # Ice lens model
 
+## Prepare input files
+
+There is a folder named example in the repository where the input file of the simulation is contained. 
 
 
-## Getting started
+## Compilation of source codes
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+The CmakeLists files have been prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository and type the following commands in the terminal:
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.ethz.ch/compmechmat/research/falks-group/you/ice-lens-model.git
-git branch -M main
-git push -uf origin main
+cd build
+cmake ..
 ```
+
+Switch on the example option and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
+
+```
+make
+```
+
+## Run the simulation
+
+In the build folder, you will find a subfolder named example where the input file of the simulation 
 
 ## Integrate with your tools
 
