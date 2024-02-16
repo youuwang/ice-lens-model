@@ -1,0 +1,59 @@
+PROJECT_NAME           = "tehpc"
+
+PREDEFINED             = __cplusplus
+
+ENABLE_PREPROCESSING   = YES
+
+INPUT                  = "@DOXYGEN_INPUT_DIR@"
+
+OUTPUT_DIRECTORY       = "@DOXYGEN_OUTPUT_DIR@"
+
+GENERATE_LATEX         = NO
+
+GENERATE_XML           = YES
+
+RECURSIVE              = YES
+
+EXTRACT_ALL            = YES
+
+SOURCE_BROWSER         = YES
+
+GENERATE_HTML          = YES
+
+QUIET                  = YES
+
+WARNINGS               = YES
+
+WARN_IF_UNDOCUMENTED   = YES
+
+SHOW_NAMESPACES        = YES
+
+CALL_GRAPH             = YES
+
+CALLER_GRAPH           = YES
+
+CLASS_DIAGRAMS         = YES
+
+HIDE_UNDOC_RELATIONS   = NO
+
+HAVE_DOT               = YES
+
+CLASS_GRAPH            = YES
+
+COLLABORATION_GRAPH    = NO
+
+UML_LOOK               = YES
+
+UML_LIMIT_NUM_FIELDS   = 50
+
+TEMPLATE_RELATIONS     = YES
+
+DOT_GRAPH_MAX_NODES    = 100
+
+MAX_DOT_GRAPH_DEPTH    = 10
+
+DOT_TRANSPARENT        = YES
+
+GRAPHICAL_HIERARCHY    = YES
+
+ALIASES                = LICENSE{1}=""

@@ -1,0 +1,20 @@
+$section material
+$mat_prop 2.5e3 800 ${porosity} ${cohesion} ${kl_eff} ${pore_size} # density(kg/m3) specific_heat_capacity(J/kgK) porosity cohesion(Pa) permeability_at_saturation(m2) characteristic_pore_throat_size(m)
+$section end
+
+$section nodes
+$nodes 601 # number of nodes
+$section end
+
+$section domain
+$length 1 # length of the domain(m)
+$section end
+
+
+$section initial_condition
+$temperature 0.5 3 # initial temperature for the structure (degree Celsius)
+$section end
+
+$section BC
+$bc -3 0.5 24 # temperature applied at origin and the other end    periodicity
+$section end
