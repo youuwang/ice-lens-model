@@ -23,7 +23,6 @@ Switch on the example option and press configure ([c]) until generate ([g]) appe
 ```
 make
 ```
-<<<<<<< HEAD
 
 ## Run a simulation
 
@@ -115,4 +114,3 @@ Typical results for senstivity analysis look like:
 ![Total Sobol' index for number of ice lenses](N_lens_Sobol_tot.png)
 
 Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py. 
->>>>>>> 3c9ce1ebfa1c6562440a424d092819cf3cea9ec4
