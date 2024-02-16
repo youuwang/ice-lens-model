@@ -72,8 +72,6 @@ Furthermore, the effects of boundary conditions (i.e., initial and minimum tempe
 
 <img src="T1_T_min_N_lens.png" alt="Number of ice lenses under different boundary conditions" width="300" height="200">
 
-=======
-
 ## Run a simulation
 
 In the build folder, you will find a subfolder also named example, to which the input file has been copied and pasted. To run a simulation, type the following commands in the terminal:
