@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is a repository for a 1D numerical model to predict ice lensing phenomenon in an initially saturated sandstone wall under different climatic conditions (monotonic and cyclic). The following steps for preparation of input files, compilation of source codes and running simulations all take the monotonic case for instance.
+This is a repository for a 1D numerical model to predict ice lensing phenomenon in an initially saturated sandstone wall under different climatic conditions (monotonic and cyclic). The following steps for preparation of input files, compilation of source codes and running simulations all take the monotonic case for instance and the cyclic case is similar.
 
 ## Prepare input files
 
@@ -11,7 +11,7 @@ The input file of the simulation (.inp) is contained in a folder named example i
 
 ## Compilation of source codes
 
-The CmakeLists files have been well prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository (i.e., ice_model_project_monotonic or ice_model_project_cycles) and type the following commands in the terminal:
+The CmakeLists files have been well prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository (i.e., ice_model_project_monotonic) and type the following commands in the terminal:
 
 ```
 cd build
@@ -85,7 +85,7 @@ Here, the executable is named as example, but it could be modified from the Cmak
 
 ## Post-process output results
 
-The post-processing of the results for monotonic climatic conditions could be done by running two files as follows depending on your Python version:
+The post-processing of the results could be done by running two files as follows depending on your Python version:
 
 ```
 python3 2dplot.py
