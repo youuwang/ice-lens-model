@@ -11,7 +11,7 @@ The input file of the simulation (.inp) is contained in a folder named example i
 
 ## Compilation of source codes
 
-The CmakeLists files have been prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository and type the following commands in the terminal:
+The CmakeLists files have been well prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository (i.e., ice_model_project_monotonic or ice_model_project_cycles) and type the following commands in the terminal:
 
 ```
 cd build
