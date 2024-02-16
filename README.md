@@ -45,8 +45,9 @@ python3 3dplot.py
 ```
 
 The paths to read the data should be modified according to your location of dumping the results. The two files will produce plots as below
-![Ice lenses under a monotonic climatic condition](ice_lenses_monotonic.png)
-![Temperature profiles under a monotonic climatic condition](T_profile_monotonic.png)
+
+<img src="ice_lenses_monotonic.png" alt="Ice lenses under a monotonic climatic condition" width="300" height="200">
+<img src="T_profile_monotonic.png" alt="Temperature profiles under a monotonic climatic condition" width="300" height="200">
 
 Sensitivity analysis is conducted in the folder named senstivity_analysis for four material parameters including porosity, cohesion, permeability at saturation, and characteristic pore size. The executable (example) should first be copied to this folder from ice_model_project_monotonic/build/example. The senstivity analysis is completed with UQ[py]Lab, a Python package developed by the Chair of Risk, Safety and Uncertainty Quantification (RSUQ) at ETHz, and it is better to install it in a clean virtual environment (e.g., set up with conda) following the instructions here: https://uqpylab.uq-cloud.io/getting-started. Then, activate the virtual environment and run ice_lens_results.py as follows, which gets the samples in the given parametric space and run the simulations:
 
@@ -62,12 +63,14 @@ python3 sen_ana.py
 ```
 
 Typical results for senstivity analysis look like:
-![Total Sobol' index for number of ice lenses](N_lens_Sobol_tot.png)
+
+<img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
 Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py.
 
 Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder periodicity_ana. Similarly, all the simulations are run with ice_lens_results.py first and then a color map could be obtained as follows, indicating the boundary conditions that trigger periodic ice lensing:
-![Number of ice lenses under different boundary conditions](T1_T_min_N_lens.png)
+
+<img src="T1_T_min_N_lens.png" alt="Number of ice lenses under different boundary conditions" width="300" height="200">
 
 =======
 
@@ -84,8 +87,6 @@ Here, the executable is named as example, but it could be modified from the Cmak
 
 ## Post-process output results
 
-### Monotonic case
-
 The post-processing of the results for monotonic climatic conditions could be done by running two files as follows depending on your Python version:
 
 ```
@@ -94,8 +95,9 @@ python3 3dplot.py
 ```
 
 The two files will produce plots as below
-![Ice lenses under a monotonic climatic condition](ice_lenses_monotonic.png)
-![Temperature profiles under a monotonic climatic condition](T_profile_monotonic.png)
+
+<img src="ice_lenses_monotonic.png" alt="Ice lenses under a monotonic climatic condition" width="300" height="200">
+<img src="T_profile_monotonic.png" alt="Temperature profiles under a monotonic climatic condition" width="300" height="200">
 
 Sensitivity analysis is conducted in the folder named senstivity_analysis for four material parameters including porosity, cohesion, permeability at saturation, and characteristic pore size. The executable (example) should first be copied to this folder from ice_model_project_monotonic/build/example. The senstivity analysis is completed with UQ[py]Lab, a Python package developed by the Chair of Risk, Safety and Uncertainty Quantification (RSUQ) at ETHz, and it is better to install it in a clean virtual environment (e.g., set up with conda) following the instructions here: https://uqpylab.uq-cloud.io/getting-started. Then, activate the virtual environment and run ice_lens_results.py as follows, which gets the samples in the given parametric space and run the simulations:
 
@@ -111,6 +113,7 @@ python3 sen_ana.py
 ```
 
 Typical results for senstivity analysis look like:
-![Total Sobol' index for number of ice lenses](N_lens_Sobol_tot.png)
+
+<img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
 Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py. 
