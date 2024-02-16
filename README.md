@@ -92,7 +92,7 @@ python3 2dplot.py
 python3 3dplot.py
 ```
 
-The two files will produce plots as below
+The paths to read the data should be modified according to your location of dumping the results. The two files will produce plots as below
 
 <img src="ice_lenses_monotonic.png" alt="Ice lenses under a monotonic climatic condition" width="300" height="200">
 <img src="T_profile_monotonic.png" alt="Temperature profiles under a monotonic climatic condition" width="300" height="200">
@@ -114,4 +114,8 @@ Typical results for senstivity analysis look like:
 
 <img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
-Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py. 
+Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py.
+
+Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder periodicity_ana. Similarly, all the simulations are run by ice_lens_results.py and then a color map could be obtained from N_ana.py as follows, indicating the boundary conditions that trigger periodic ice lensing:
+
+<img src="T1_T_min_N_lens.png" alt="Number of ice lenses under different boundary conditions" width="300" height="200">
