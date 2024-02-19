@@ -16,5 +16,5 @@ $temperature 0.5 3 # initial temperature for the structure (degree Celsius) on t
 $section end
 
 $section BC
-$bc -5 0.5 24 4 # limit temperature at two ends; vch; number of cycles
+$bc -5 0.5 24 4 # Min and max temperatures at the cooler side; vch; number of cycles
 $section end

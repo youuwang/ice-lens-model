@@ -16,5 +16,5 @@ $temperature 0.5 3 # initial temperature for the structure (degree Celsius) on t
 $section end
 
 $section BC
-$bc -3 0.5 24 # temperature applied at origin and the other end    periodicity
+$bc -3 0.5 24 # Min and max temperatures at the cooler side    periodicity
 $section end
