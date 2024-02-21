@@ -92,7 +92,7 @@ python3 2dplot.py
 python3 3dplot.py
 ```
 
-The paths to read the data should be modified according to your location of dumping the results. The two files will produce plots as below
+The paths to read the data in the two scripts above should be modified according to your location of dumping the results. The two files will produce plots as below
 
 <img src="ice_lenses_monotonic.png" alt="Ice lenses under a monotonic climatic condition" width="300" height="200">
 <img src="T_profile_monotonic.png" alt="Temperature profiles under a monotonic climatic condition" width="300" height="200">
