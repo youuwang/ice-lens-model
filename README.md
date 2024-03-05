@@ -11,14 +11,20 @@ The input file of the simulation (.inp) is contained in a folder named example i
 
 ## Compilation of source codes
 
-The CmakeLists files have been well prepared. To compile, you need to have cmake with a version 3.1 at least. First, create a build folder in the repository (i.e., ice_model_project_monotonic) and type the following commands in the terminal:
+The CmakeLists files have been well prepared. To compile, you need to have cmake with a version 3.1 at least and install ccmake with the following command:
+
+```
+sudo apt-get install cmake-curses-gui
+```
+
+Then, create a **build** folder in the repository (i.e., ice_model_project_monotonic) and type the following commands in the terminal:
 
 ```
 cd build
-cmake ..
+ccmake ..
 ```
 
-Switch on the example option and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
+Switch on the example option by pressing [Enter] and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
 
 ```
 make
@@ -26,7 +32,7 @@ make
 
 ## Run a simulation
 
-In the build folder, you will find a subfolder also named example, to which the input file has been copied and pasted. To run a simulation, type the following commands in the terminal:
+In the **build** folder, you will find a subfolder also named **example**, to which the input file has been copied and pasted. To run a simulation, type the following commands in the terminal:
 
 ```
 cd example
@@ -68,6 +74,6 @@ Typical results for senstivity analysis look like:
 
 Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py.
 
-Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder periodicity_ana. Similarly, all the simulations are run with ice_lens_results.py first and then a color map could be obtained as follows, indicating the boundary conditions that trigger periodic ice lensing:
+Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder periodicity_ana. Similarly, all the simulations are run with ice_lens_results.py first and then a color map could be obtained as follows by running N_ana.py, indicating the boundary conditions that trigger periodic ice lensing:
 
 <img src="T1_T_min_N_lens.png" alt="Number of ice lenses under different boundary conditions" width="300" height="200">
