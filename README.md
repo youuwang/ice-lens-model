@@ -15,10 +15,10 @@ The CmakeLists files have been well prepared. To compile, you need to have cmake
 
 ```
 cd build
-cmake ..
+ccmake ..
 ```
 
-Switch on the example option and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
+Switch on the example option by pressing [Enter] and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
 
 ```
 make
