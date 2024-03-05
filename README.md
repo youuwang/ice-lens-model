@@ -39,7 +39,7 @@ cd example
 ./example <input_file_path> <output_path>
 ```
 
-Here, the executable is named as example, but it could be modified from the CmakeLists file in the example folder in the repository (not in the build folder). Note that the input file and output paths are relative paths to the current working directory.
+Here, the executable is named as **example**, but it could be modified from the CmakeLists file in the **example** folder in the repository (not in the **build** folder). Note that the input file and output paths are relative paths to the current working directory.
 
 ## Post-process output results
 
@@ -62,7 +62,7 @@ conda activate <name_of_virtual_environment>
 python3 ice_lens_results.py
 ```
 
-The variable wd in ice_lens_results.py, which indicates the current working directory, should be modified accordingly. UQ[py]Lab is then used to evaluate the total Sobol' indices of the parameters on two model responses (i.e., total ice lens thickness and number of ice lenses) by:
+The variable wd in **ice_lens_results.py**, which indicates the current working directory, should be modified accordingly. UQ[py]Lab is then used to evaluate the total Sobol' indices of the parameters on two model responses (i.e., total ice lens thickness and number of ice lenses) by:
 
 ```
 python3 sen_ana.py
@@ -72,8 +72,8 @@ Typical results for senstivity analysis look like:
 
 <img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
-Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in sen_ana.py.
+Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in **sen_ana.py**.
 
-Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder periodicity_ana. Similarly, all the simulations are run with ice_lens_results.py first and then a color map could be obtained as follows by running N_ana.py, indicating the boundary conditions that trigger periodic ice lensing:
+Furthermore, the effects of boundary conditions (i.e., initial and minimum temperatures at the cooler side) on the ice lensing phenomenon are investigated in the folder **periodicity_ana**. Similarly, all the simulations are run with ice_lens_results.py first and then a color map could be obtained as follows by running **N_ana.py**, indicating the boundary conditions that trigger periodic ice lensing:
 
 <img src="T1_T_min_N_lens.png" alt="Number of ice lenses under different boundary conditions" width="300" height="200">
