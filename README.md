@@ -3,7 +3,7 @@
 ## Introduction
 
 This is a repository for a 1D numerical model to predict ice lensing in an initially saturated sandstone wall under different climatic conditions (monotonic and cyclic). Ice lensing refers to the phenomenon where thin layers of ice form in porous materials due to the premelting liquid film between ice and solid matrix, as shown in the figures below.
-<img src="ice_lensing_Taber.png" alt="Ice lenses observed by Taber" width="300" height="200">
+<img src="ice_lensing_Taber.png" alt="Ice lenses observed by Taber" width="100" height="200">
 <img src="premelting.png" alt="Premlting film between ice and solid particles" width="300" height="200">
 As observed by Taber in soils, the periodic ice lensing, which means ice lenses come one after another along the depth, is of great interest since it creates multiple cracks in the porous medium and weakens the material under freezing conditions. Thus, it is essential to predict the occurrence of periodic ice lensing, especially for cyclic climatic conditions.
 
