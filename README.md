@@ -50,7 +50,7 @@ Here, the executable is named as **example**, but it could be modified from the 
 
 ## Post-process output results
 
-The post-processing of the results could be done by running two files as follows depending on your Python version:
+The post-processing of the results could be done by running two files in **postprocessing** folder as follows depending on your Python version:
 
 ```
 python3 2dplot.py
@@ -75,7 +75,7 @@ The variable wd in **ice_lens_results.py**, which indicates the current working 
 python3 sen_ana.py
 ```
 
-Typical results for senstivity analysis look like:
+The two Python files above are also included in the **postprocessing** folder. Typical results for senstivity analysis look like:
 
 <img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
