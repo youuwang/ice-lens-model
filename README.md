@@ -7,7 +7,7 @@ This is a repository for a 1D numerical model to predict ice lensing in an initi
 <img src="ice_lensing_Taber.png" alt="Ice lenses observed by Taber" width="100" height="200">
 <img src="premelting.png" alt="Premlting film between ice and solid particles" width="300" height="200">
 
-As observed by Taber in soils, the periodic ice lensing, which means ice lenses come one after another along the depth, is of great interest since it creates multiple cracks in the porous medium and weakens the material under freezing conditions. Thus, it is essential to predict the occurrence of periodic ice lensing, especially for cyclic climatic conditions.
+As observed in soils from the first figure, the periodic ice lensing, which means ice lenses come one after another along the depth, is of great interest since it creates multiple cracks in the porous medium and weakens the material under freezing conditions. Thus, it is essential to predict the occurrence of periodic ice lensing, especially for cyclic climatic conditions.
 
 The following steps for preparation of input files, compilation of source codes and running simulations all take the monotonic case for instance and the cyclic case is similar.
 
@@ -31,7 +31,7 @@ cd build
 ccmake ..
 ```
 
-Switch on the example option by pressing [Enter] and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press g to generate cmake files. In the terminal, type
+Switch on the example option by pressing [Enter] and press configure ([c]) until generate ([g]) appears at the bottom. Finally, press [g] to generate cmake files. In the terminal, type
 
 ```
 make
@@ -46,7 +46,7 @@ cd example
 ./example <input_file_path> <output_path>
 ```
 
-Here, the executable is named as **example**, but it could be modified from the CmakeLists file in the **example** folder in the repository (not in the **build** folder). Note that the input file and output paths are relative paths to the current working directory.
+Here, the executable is named as **example**, but it could be modified from the CmakeLists file in the **example** folder in the repository (not in the **build** folder). A **result** folder could be created somewhere for dumping of the output. Note that the input file and output paths are both relative paths to the current working directory. Another noteworthy point is that the input file path here is without the suffix, e.g., **vertical_wall** for **vertical_wall.inp**.
 
 ## Post-process output results
 
