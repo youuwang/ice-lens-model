@@ -378,7 +378,12 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 }
             }
             if (this->phi_n[i] == this->phi) {
-                this->label[i] = 1;
+                if ((this->x[i] > this->x_dry) || (this->x[i] == this->x_dry)) {
+                    this->label[i] = 0;
+                }
+                else {
+                    this->label[i] = 1;
+                }
             }
             else if (this->T[i] > 0) {
                 this->label[i] = 3;
@@ -759,8 +764,11 @@ void Ice_model::cal_rho_c_eff() {
         else if (this->label[j] == 3) {
             this->rho_c_eff[j] = this->rho_l * this->cp_l;
         }
-        else {
+        else if (this->label[j] == 1) {
             this->rho_c_eff[j] = Si[j] * this->phi * this->rho_i * this->cp_i + (1 - Si[j]) * this->phi * this->rho_l * this->cp_l + (1 - this->phi) * this->rho_s * this->cp_s;
+        }
+        else {
+            this->rho_c_eff[j] = this->rho_s * this->cp_s * (1 - this->phi);
         }
     }
 }
@@ -774,8 +782,11 @@ void Ice_model::cal_kappa() {
         else if (this->label[j] == 3) {
             this->kappa[j] = this->kappa_l;
         }
-        else {
+        else if (this->label[j] == 1){
             this->kappa[j] = pow(this->kappa_s[j], 1 - this->phi) * pow(this->kappa_i, this->phi * Si[j]) * pow(this->kappa_l, this->phi * (1 - Si[j]));
+        }
+        else {
+            this->kappa[j] = this->kappa_s[j];
         }        
     }
 }

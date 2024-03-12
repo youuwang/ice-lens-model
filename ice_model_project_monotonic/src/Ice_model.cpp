@@ -537,7 +537,7 @@ void Ice_model::cal_rho_c_eff() {
             this->rho_c_eff[j] = this->rho_i * this->cp_i;
         }
         else if (this->label[j] == 3) {
-            this->rho_c_eff[j] = this->rho_s * this->cp_s;
+            this->rho_c_eff[j] = this->rho_s * this->cp_s * (1 - this->phi);
         }
         else {
             this->rho_c_eff[j] =  Si[j] * this->phi * this->rho_i * this->cp_i + (1 - Si[j]) * this->phi * this->rho_l * this->cp_l + (1 - this->phi) * this->rho_s * this->cp_s;
@@ -555,7 +555,6 @@ void Ice_model::cal_kappa() {
             this->kappa[j] = this->kappa_s[j];
         }
         else {
-            // this->kappa[j] = pow(this->kappa_s[j], 1 - this->phi) * pow(this->kappa_l, this->phi);
             this->kappa[j] = pow(this->kappa_s[j], 1 - this->phi) * pow(this->kappa_i, this->phi * Si[j]) * pow(this->kappa_l, this->phi * (1 - Si[j]));
         }        
     }
