@@ -31,6 +31,7 @@ void Ice_model::read_input(std::string filename) {
             sstr >> this->c;
             sstr >> this->k0;
             sstr >> this->Rp;
+            sstr >> this->R;
         } 
         else if (word == "$nodes") {
             sstr >> this->N;
@@ -52,15 +53,15 @@ void Ice_model::read_input(std::string filename) {
 }
 
 
-void Ice_model::solve(ofstream& output_T, ofstream& output_ice_lens, ofstream& label_time, ofstream& crack_state_time) {
-    ofstream time_N_lens("t_N.dat");
-    ofstream ub_lb("ub_lb_t");
-    ofstream time_xf2("t_xf2.dat");
-    ofstream time_xf3("t_xf3.dat");
-    ofstream Tu_Tl("Tu_Tl.dat");
-    ofstream time1("t1.dat");
-    ofstream time_dry("t_dry.dat");
-    ofstream active_ice_lens("active_ice_lens.dat");
+void Ice_model::solve(ofstream& output_T, ofstream& output_ice_lens, ofstream& label_time, ofstream& crack_state_time, ofstream& x_time) {
+    ofstream time_N_lens(this->out_dir  + "/t_N.dat");
+    ofstream ub_lb(this->out_dir  + "/ub_lb_t");
+    ofstream time_xf2(this->out_dir  + "/t_xf2.dat");
+    ofstream time_xf3(this->out_dir  + "/t_xf3.dat");
+    ofstream Tu_Tl(this->out_dir  + "/Tu_Tl.dat");
+    ofstream time1(this->out_dir  + "/t1.dat");
+    ofstream time_dry(this->out_dir  + "/t_dry.dat");
+    ofstream active_ice_lens(this->out_dir  + "/active_ice_lens.dat");
 
     while(this->N_cyc < this->cyc_tot) {
         switch (this->flag) {
@@ -82,11 +83,11 @@ void Ice_model::solve(ofstream& output_T, ofstream& output_ice_lens, ofstream& l
                         goto case1;
                     }
 
-                    this->solve3(output_T, label_time, crack_state_time);
+                    this->solve3(output_T, label_time, crack_state_time, x_time);
                     this->flag = 1;
                 }
                 else {
-                    this->solve3(output_T, label_time, crack_state_time);
+                    this->solve3(output_T, label_time, crack_state_time, x_time);
                     this->flag = 1;
                     std::cout << "Cooling ends" << std::endl;
                 }
@@ -94,7 +95,7 @@ void Ice_model::solve(ofstream& output_T, ofstream& output_ice_lens, ofstream& l
             case 1:
             case1:
                 if (this->solve3_active == true) {
-                    this->solve3(output_T, label_time, crack_state_time);
+                    this->solve3(output_T, label_time, crack_state_time, x_time);
                 }
                 else if (this->solve2_active == true) {
                     this->solve2(output_T);
@@ -181,7 +182,7 @@ void Ice_model::solve1(ofstream& output_T) {
         }
 
         //output results
-        if (fabs(this->time_output - 0.1) < 1e-8) {
+        if (fabs(this->time_output - 0.2 / this->time_sf) < 1e-8) {
             for (int i = 0; i < this->N; i++) {
                 if (i < this->N - 1) {
                     output_T << this->T[i] << "\t";
@@ -191,7 +192,7 @@ void Ice_model::solve1(ofstream& output_T) {
                 }
             }
 
-            this->time_t1.push_back(this->time);
+            this->time_t1.push_back(this->time * this->time_sf);
             this->time_output = 0;
         }
         this->time_output += this->dt;
@@ -243,14 +244,14 @@ void Ice_model::solve2(ofstream& output_T) {
         //locate Tm
         for (int i = 0; i < this->N - 1; i++) {
             if ((T_temp[i] * T_temp[i + 1] < 0) || (T_temp[i] == 0)) {
-                this->x0_active = this->x[i] + this->dx * (- T_temp[i]) / (T_temp[i + 1] - T_temp[i]);
+                this->x0_active = this->x[i] + this->dx[i + 1] * (- T_temp[i]) / (T_temp[i + 1] - T_temp[i]);
             }
         }
 
         // locate Tf
         for (int i = 0; i < this->N - 1; i++) {
             if (((this->Tf - 273.15 - this->T[i]) * (this->Tf - 273.15 - this->T[i + 1]) < 0) || (this->Tf - 273.15 - this->T[i] == 0)) {
-                this->xf = this->x[i] + this->dx * ((this->Tf - 273.15) - this->T[i]) / (this->T[i + 1] - this->T[i]);
+                this->xf = this->x[i] + this->dx[i + 1] * ((this->Tf - 273.15) - this->T[i]) / (this->T[i + 1] - this->T[i]);
             }
         }
 
@@ -263,12 +264,12 @@ void Ice_model::solve2(ofstream& output_T) {
         for (int j = 0; j < N_temp; j++) {
             index_x_temp = this->find_index(x_temp[j]);
             integral = this->FT_int(x_temp[j]);
-            Tx = this->T[index_x_temp] + (x_temp[j] - this->x[index_x_temp]) / this->dx * (this->T[index_x_temp + 1] - this->T[index_x_temp]) + 273.15;
+            Tx = this->T[index_x_temp] + (x_temp[j] - this->x[index_x_temp]) / this->dx[index_x_temp + 1] * (this->T[index_x_temp + 1] - this->T[index_x_temp]) + 273.15;
             Fp[j] = this->c * (1 - this->phi) - this->rho_i * this->L / this->Tm * (integral + (this->Tm - Tx) * (1 - this->phi * this->ice_sat_fun(Tx)));
         }
 
         // Output the result
-        if (fabs(this->time_output - 0.1) < 1e-8) {
+        if (fabs(this->time_output - 0.2 / this->time_sf) < 1e-8) {
             for (int i = 0; i < this->N; i++) {
                 if (i < this->N - 1) {
                     output_T << this->T[i] << "\t";
@@ -277,7 +278,7 @@ void Ice_model::solve2(ofstream& output_T) {
                     output_T << this->T[i] << endl;
                 }
             }
-            this->time_t2.push_back(this->time);
+            this->time_t2.push_back(this->time * this->time_sf);
             this->xf_t2.push_back(this->xf);
             this->time_output = 0;
             for (int j = 0; j < N_temp; j++) {
@@ -319,13 +320,13 @@ void Ice_model::solve2(ofstream& output_T) {
 
                 //! calculate the temperature of the first ice lens
                 int ice_active_ini = this->find_index(this->lens_ini);
-                this->Tl.push_back(this->T[ice_active_ini] + (lens_ini - this->x[ice_active_ini]) / this->dx * (this->T[ice_active_ini + 1] - this->T[ice_active_ini]) + 273.15);
-                this->T_ub.push_back(this->T[ice_active_ini] + (lens_ini - this->x[ice_active_ini]) / this->dx * (this->T[ice_active_ini + 1] - this->T[ice_active_ini]) + 273.15);                    
+                this->Tl.push_back(this->T[ice_active_ini] + (lens_ini - this->x[ice_active_ini]) / this->dx[ice_active_ini + 1] * (this->T[ice_active_ini + 1] - this->T[ice_active_ini]) + 273.15);
+                this->T_ub.push_back(this->T[ice_active_ini] + (lens_ini - this->x[ice_active_ini]) / this->dx[ice_active_ini + 1] * (this->T[ice_active_ini + 1] - this->T[ice_active_ini]) + 273.15);                    
 
                 // locate Tm
                 for (int i = 0; i < this->N - 1; i++) {
                     if ((T_temp[i] * T_temp[i + 1] < 0) || (T_temp[i] == 0)) {
-                        this->x0.push_back(this->x[i] + this->dx * (- T_temp[i]) / (T_temp[i + 1] - T_temp[i]));
+                        this->x0.push_back(this->x[i] + this->dx[i + 1] * (- T_temp[i]) / (T_temp[i + 1] - T_temp[i]));
                     }  
                 }
 
@@ -336,24 +337,24 @@ void Ice_model::solve2(ofstream& output_T) {
     F_p.close();
 }
 
-void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack_state_time) {
+void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack_state_time, ofstream& x_time) {
     // std::vector<double> x0_prev; // previous position of 0 degree Celsius
     double integral_FT; // integral inside the expression of FT
     double integral_F_mu; // integral inside the expression of F_mu
-    int N_temp = 50; // size of x_temp
-    std::vector<double> Fp; // net interparticle force at each node of interest
-    double x_temp; // temporary x for calculation of Fp
+    int N_temp = 20; // size of x_temp
+    std::vector<double> Fp(N_temp, 0); // net interparticle force at each node of interest
+    std::vector<double> x_temp(N_temp, 0); // temporary x for calculation of Fp
     int index_x_temp; // index of element where x_temp is located
     double Tx; // temperature at x_temp
     this->solver_ptr = std::make_shared<FDM_icelens>(this->d, this->N);
     std::vector<double> T_temp;
     bool new_ice_lens; // indicator for new ice lens formation
+    double xf_active; // active xf
     std::vector<double> x0_temp;
     std::vector<double> mw; // water amount stored
     std::vector<double> x_lb_temp; // temporary x_lb
     std::vector<double> x_ub_temp; // temporary x_ub
-    std::vector<double> xf_all; // all xf
-    std::vector<double> x_temp1; // vector of x_temp
+    std::vector<double> xf_all; // all xf 
 
     while (true) {
         this->time += this->dt;
@@ -368,6 +369,50 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
         if (*xl_max > this->d) {
             std::cout << "Over" << std::endl;
             return;
+        }
+
+        // locate Tm
+        for (int i = 0; i < this->N - 1; i++) {
+            if ((this->T[i] * this->T[i + 1] < 0) || (this->T[i] == 0)) {
+                x0_temp.push_back(this->x[i] + this->dx[i + 1] * (- this->T[i]) / (this->T[i + 1] - this->T[i]));
+            }
+        }
+        this->x0 = x0_temp;
+
+        for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
+            bool inice_0 = false;
+            for (int j = 0; j < static_cast<int>(x0_temp.size()); j++) {
+                if ((x0_temp[j] - this->x_lb[i]) * (x0_temp[j] - this->x_ub[i]) < 0) {
+                    inice_0 = true;
+                    break;
+                }
+            }
+            if (inice_0 == true) {
+                this->crack_state[i] = 1;
+            }
+            else if ((this->Tl[i] > this->Tm) || (this->T_ub[i] > this->Tm)) {
+                this->crack_state[i] = 2;
+            }
+            else {
+                this->crack_state[i] = 0;
+            }
+        }
+        x0_temp.clear();
+
+        if (this->crack_state[0] == 2) {
+            if (this->first_ice == true) {
+                this->crack_state.erase(this->crack_state.begin());
+                this->x[0] = this->x_lb[0];
+                this->x_lb.erase(this->x_lb.begin());
+                this->x_ub.erase(this->x_ub.begin());
+                this->T_ub.erase(this->T_ub.begin());
+                this->Tl.erase(this->Tl.begin());
+                this->idx_ub.erase(this->idx_ub.begin());
+                this->idx_lb.erase(this->idx_lb.begin());
+                std::cout << this->x[0] << std::endl;
+
+                this->first_ice = false;
+            }
         }
 
         for (int i = 0; i < this->N - 1; i++) {
@@ -394,39 +439,18 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
         }
         this->phi_n.assign(this->N, this->phi);
 
-        // locate Tm
-        for (int i = 0; i < this->N - 1; i++) {
-            if ((this->T[i] * this->T[i + 1] < 0) || (this->T[i] == 0)) {
-                x0_temp.push_back(this->x[i] + this->dx * (- this->T[i]) / (this->T[i + 1] - this->T[i]));
-            }
-        }
-        this->x0 = x0_temp;
-        x0_temp.clear();
-
-        for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
-            if ((this->Tl[i] - this->Tm) * (this->T_ub[i] - this->Tm) < 0) {
-                this->crack_state[i] = 1;
-            }
-            else if (this->T_ub[i] > this->Tm) {
-                this->crack_state[i] = 2;
-            }
-            else {
-                this->crack_state[i] = 0;
-            }
-        }
-
         this->ice_active = this->ice_lens_active();
 
         // locate Tf
         for (int i = 0; i < this->N - 1; i++) {
             if (((this->Tf - 273.15 - this->T[i]) * (this->Tf - 273.15 - this->T[i + 1]) < 0) || ((this->Tf - 273.15) == this->T[i])) {
-                this->xf = this->x[i] + this->dx * ((this->Tf - 273.15) - this->T[i]) / (this->T[i + 1] - this->T[i]);
+                this->xf = this->x[i] + this->dx[i + 1] * ((this->Tf - 273.15) - this->T[i]) / (this->T[i + 1] - this->T[i]);
                 this->idx = i;
                 xf_all.push_back(this->xf);
             }
         }
 
-        // determine the active x0
+        // determine the active x0 and xf
         if (this->ice_active != 1e6) {
             for (int j = 0; j < static_cast<int>(this->x0.size()); j++) {
                 if (this->x0[j] > this->x_lb[this->ice_active]) {
@@ -434,11 +458,13 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                     break;
                 }
             }
+
+            xf_active = this->xf;
         }
 
         T_temp = this->T;
 
-        if (fabs(this->time_output - 0.1) < 1e-8) {
+        if (fabs(this->time_output - 0.2 / this->time_sf) < 1e-8) {
             for (int i = 0; i < this->N; i++) {
                 if (i < this->N - 1) {
                     output_T << T_temp[i] << "\t";
@@ -464,7 +490,7 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 this->Tl_t.push_back(this->Tl[j]);
             }
 
-            this->time_t3.push_back(this->time);
+            this->time_t3.push_back(this->time * this->time_sf);
             this->xf_t3.push_back(this->xf);
             this->x_dry_t.push_back(this->x_dry);
             this->ice_active_t.push_back(this->ice_active);
@@ -477,7 +503,7 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
 
             for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
                 if (this->ice_active == 1e6) {
-                    std::cout << this->T_ub[i] << "\t" << this->Tl[i] << "\t" << "No active ice lenses" << std::endl;
+                    std::cout << this->T_ub[i] << "\t" << this->Tl[i] << "\t" << "No active ice lenses" << " " << this->vl << std::endl;
                 }
                 else {
                     std::cout << this->T_ub[i] <<"\t"<< this->Tl[i] << "\t" << this->vl << std::endl;
@@ -493,17 +519,18 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 }
             }
 
+            for (int i = 0; i < this->N; i++) {
+                if (i < this->N - 1) {
+                    x_time << this->x[i] << "\t";
+                }
+                else {
+                    x_time << this->x[i] << endl;
+                }
+            }
+
             this->time_output = 0;
         }
         this->time_output += this->dt;
-
-        // // bi-linear T
-        // if (this->flag == 0) {
-        //     this->T[0] -= this->v_ch * this->dt;
-        // }
-        // else {
-        //     this->T[0] += this->v_ch * this->dt;
-        // }
 
         // Cosine T
         this->T[0] = (this->T1 + this->T2) / 2 + (this->T2 - this->T1) / 2 * cos(2 * M_PI * this->time / this->v_ch);
@@ -525,21 +552,21 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 d_tot_temp += (x_lb_temp[k] - x_ub_temp[k]);
             }
             mw.push_back(d_tot_temp + (this->d - x_ub_temp[j] - d_tot_temp) * this->phi);
-            mw.push_back(d_tot_temp + (this->d - x_lb_temp[j] - d_tot_temp) * this->phi - (x_lb_temp[j] - x_ub_temp[j]));
+            mw.push_back(d_tot_temp + (this->d - x_ub_temp[j] - d_tot_temp) * this->phi - (x_lb_temp[j] - x_ub_temp[j]));
         }
 
-        if (((1 - this->phi) * d_tot < mw.back()) || ((1 - this->phi) * d_tot == mw.back())) {
-            this->x_dry = this->d - (1 - this->phi) * d_tot / this->phi;
+        if ((d_tot < mw.back()) || (d_tot == mw.back())) {
+            this->x_dry = this->d - d_tot / this->phi;
         }
         else {
             for (int i = 0; i < static_cast<int>(mw.size()) - 1; i++) {
-                if ((((1 - this->phi) * d_tot < mw[i]) && ((1 - this->phi) * d_tot > mw[i + 1])) || ((1 - this->phi) * d_tot == mw[i])) {
+                if (((d_tot < mw[i]) && (d_tot > mw[i + 1])) || (d_tot == mw[i])) {
                     if (i % 2 == 0) {
-                        this->x_dry = x_lb_temp[i / 2] - (1 - this->phi) * d_tot + mw[i + 1];
+                        this->x_dry = x_lb_temp[i / 2] - d_tot + mw[i + 1];
                         break;
                     }
                     else {
-                        this->x_dry = x_ub_temp[i / 2 + 1] - ((1 - this->phi) * d_tot - mw[i + 1]) / this->phi;
+                        this->x_dry = x_ub_temp[i / 2 + 1] - (d_tot - mw[i + 1]) / this->phi;
                         break;
                     }
                 }
@@ -552,22 +579,23 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
             this->vl = 0;
             this->solver_ptr->solve(this);
             for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
-                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
-                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
+                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx[this->idx_ub[j] + 1] * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
+                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx[this->idx_lb[j] + 1] * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
             }
 
             continue;
         }
 
+        //! calculate vl
+        this->vl = this->vl_fun();
+
         //! No ice lens is active
         if (this->ice_active == 1e6) {
-
-            this->vl = 0;
             this->solver_ptr->solve(this);
 
             for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
-                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
-                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
+                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx[this->idx_ub[j] + 1] * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
+                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx[this->idx_lb[j] + 1] * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
             }
 
             continue;
@@ -575,12 +603,7 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
 
         // constrain the ice lens boundary
         if (this->Tl[this->ice_active] > this->Tf) {
-            if ((this->Tl[this->ice_active] > this->Tm) || (this->Tl[this->ice_active] == this->Tm)) {
-                this->vl = 0;
-            }
-            else {
-                this->vl = (this->rho_i * this->L / this->Tm * (this->Tm - this->Tl[this->ice_active])) / (this->mu / this->k0 * (this->x0_active - this->x_lb[this->ice_active]));
-            }
+            std::cout << "yes" << " " << this->vl << " " << this->x_lb[this->ice_active] << " " << this->x0_active << " " << this->ice_active << std::endl;
             this->solver_ptr->solve(this);
 
             for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
@@ -592,74 +615,52 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 }
             }
             this->x_lb[this->ice_active] = this->x_lb[this->ice_active] + this->vl * this->dt;
+            this->update_grid();
+            this->d = this->x.back();
             this->idx_lb[this->ice_active] = this->find_index(this->x_lb[this->ice_active]);
 
             for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
-                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
-                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
+                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx[this->idx_ub[j] + 1] * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
+                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx[this->idx_lb[j] + 1] * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
             }
 
             continue;
         }
-        
-        // calculate heave rate of current ice lens
-        this->vl = this->rho_i * this->L / this->Tm * this->FT_int(this->x_lb[this->ice_active]) / this->mu / this->F_mu_int(this->x_lb[this->ice_active]);
 
         new_ice_lens = false;
 
+        // get net interparticle force profile above frozen fringe boundary
         for (int i = 0; i < N_temp; i++) {
-            x_temp = this->x_lb[this->ice_active] + (this->x0_active - this->x_lb[this->ice_active]) / (N_temp - 1) * i;
-            integral_FT = this->FT_int(x_temp);
-            integral_F_mu = this->F_mu_int(x_temp);
-            index_x_temp = this->find_index(x_temp);
-            if (index_x_temp == this->idx_lb[this->ice_active]) {
-                Tx = this->Tl[this->ice_active] + (x_temp - this->x_lb[this->ice_active]) / (this->x[this->idx_lb[this->ice_active] + 1] - this->x_lb[this->ice_active]) * (T_temp[index_x_temp + 1] + 273.15 - this->Tl[this->ice_active]);
-            }
-            else {
-                Tx = this->T[index_x_temp] + (x_temp - this->x[index_x_temp]) / this->dx * (T_temp[index_x_temp + 1] - T_temp[index_x_temp]) + 273.15;
-            }
-
-            if (Tx < this->Tf) {
-                Fp.push_back(this->mu * this->vl * integral_F_mu + this->c * (1 - this->phi) - this->rho_i * this->L / this->Tm * (integral_FT + (this->Tm - Tx) * (1 - this->phi * this->ice_sat_fun(Tx))));
-                x_temp1.push_back(x_temp);
-            }
+            x_temp[i] = this->x_lb[this->ice_active] + (xf_active - this->x_lb[this->ice_active]) / (N_temp - 1) * i;
         }
 
-        // get net interparticle force profile above frozen fringe boundary
-        if (static_cast<int>(Fp.size()) == 0) {
-            this->solver_ptr->solve(this);
-            for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
-                if (this->x_lb[i] > this->x_lb[this->ice_active]) {
-                    this->x_lb[i] = this->x_lb[i] + this->vl * this->dt;
-                    this->x_ub[i] = this->x_ub[i] + this->vl * this->dt;
-                    this->idx_lb[i] = this->find_index(this->x_lb[i]);
-                    this->idx_ub[i] = this->find_index(this->x_ub[i]);
-                }
+        for (int j = 0; j < N_temp; j++) {
+            integral_FT = this->FT_int(x_temp[j]);
+            integral_F_mu = this->F_mu_int(x_temp[j]);
+            index_x_temp = this->find_index(x_temp[j]);
+            if (index_x_temp == this->idx_lb[this->ice_active]) {
+                Tx = this->Tl[this->ice_active] + (x_temp[j] - this->x_lb[this->ice_active]) / (this->x[this->idx_lb[this->ice_active] + 1] - this->x_lb[this->ice_active]) * (T_temp[index_x_temp + 1] + 273.15 - this->Tl[this->ice_active]);
             }
-            this->x_lb[this->ice_active] = this->x_lb[this->ice_active] + this->vl * this->dt;
-            this->idx_lb[this->ice_active] = this->find_index(this->x_lb[this->ice_active]);
-
-            for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
-                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
-                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
+            else {
+                Tx = this->T[index_x_temp] + (x_temp[j] - this->x[index_x_temp]) / this->dx[index_x_temp + 1] * (T_temp[index_x_temp + 1] - T_temp[index_x_temp]) + 273.15;
             }
 
-            continue;
+            Fp[j] = this->mu * this->vl / this->k0 * integral_F_mu + this->c * (1 - this->phi) - this->rho_i * this->L / this->Tm * (integral_FT + (this->Tm - Tx) * (1 - this->phi * this->ice_sat_fun(Tx)));
         }
 
         this->solver_ptr->solve(this);
 
         // check if new ice lens is initiated
-        for (int j = 0; j < static_cast<int>(Fp.size()) - 1; j++) {
+        for (int j = 0; j < N_temp - 1; j++) {
             if ((Fp[j] * Fp[j + 1] < 0) || (Fp[j] == 0)) {
-                double lens_position = x_temp1[j] + (- Fp[j]) / (Fp[j + 1] - Fp[j]) * (x_temp1[j + 1] - x_temp1[j]);
+                double lens_position = x_temp[j] + (- Fp[j]) / (Fp[j + 1] - Fp[j]) * (x_temp[j + 1] - x_temp[j]);
                 new_ice_lens = true; 
                 this->x_lb.push_back(lens_position);
                 this->x_ub.push_back(lens_position);
                 this->idx_lb.push_back(this->find_index(lens_position));
                 this->idx_ub.push_back(this->find_index(lens_position));
-                this->T_ub.push_back(this->T[this->idx_lb.back()] + (lens_position - this->x[this->idx_lb.back()]) / this->dx * (this->T[this->idx_lb.back() + 1] - this->T[this->idx_lb.back()]) + 273.15);
-                this->Tl.push_back(this->T[this->idx_lb.back()] + (lens_position - this->x[this->idx_lb.back()]) / this->dx * (this->T[this->idx_lb.back() + 1] - this->T[this->idx_lb.back()]) + 273.15);
+                this->T_ub.push_back(this->T[this->idx_lb.back()] + (lens_position - this->x[this->idx_lb.back()]) / this->dx[this->idx_lb.back() + 1] * (this->T[this->idx_lb.back() + 1] - this->T[this->idx_lb.back()]) + 273.15);
+                this->Tl.push_back(this->T[this->idx_lb.back()] + (lens_position - this->x[this->idx_lb.back()]) / this->dx[this->idx_lb.back() + 1] * (this->T[this->idx_lb.back() + 1] - this->T[this->idx_lb.back()]) + 273.15);
                 this->crack_state.push_back(0);
                 std::cout << "Ice lens formed at " << lens_position << std::endl;
 
@@ -672,71 +673,24 @@ void Ice_model::solve3(ofstream& output_T, ofstream& label_time, ofstream& crack
                 if (this->x_lb[i] > this->x_lb[this->ice_active]) {
                     this->x_lb[i] = this->x_lb[i] + this->vl * this->dt;
                     this->x_ub[i] = this->x_ub[i] + this->vl * this->dt;
-                    this->idx_lb[i] = this->find_index(this->x_lb[i]);
-                    this->idx_ub[i] = this->find_index(this->x_ub[i]);
                 }
             }
             this->x_lb[this->ice_active] = this->x_lb[this->ice_active] + this->vl * this->dt;
-            this->idx_lb[this->ice_active] = this->find_index(this->x_lb[this->ice_active]);
+            this->update_grid();
+            this->d = this->x.back();
+            for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
+                if ((this->x_lb[j] > this->x_lb[this->ice_active]) || (this->x_lb[j] == this->x_lb[this->ice_active])) {
+                    this->idx_lb[j] = this->find_index(this->x_lb[j]);
+                    this->idx_ub[j] = this->find_index(this->x_ub[j]);
+                }
+            }
 
             for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
-                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
-                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
+                this->T_ub[j] = 273.15 + this->T[this->idx_ub[j]] + (this->x_ub[j] - this->x[this->idx_ub[j]]) / this->dx[this->idx_ub[j] + 1] * (this->T[this->idx_ub[j] + 1] - this->T[this->idx_ub[j]]);
+                this->Tl[j] = 273.15 + this->T[this->idx_lb[j]] + (this->x_lb[j] - this->x[this->idx_lb[j]]) / this->dx[this->idx_lb[j] + 1] * (this->T[this->idx_lb[j] + 1] - this->T[this->idx_lb[j]]);
             }
         }
-        x_temp1.clear();
-        Fp.clear();
     }
-}
-
-void Ice_model::kappa_soil() {
-    for (int i = 0; i < this->N; i++) {
-        this->kappa_s[i] = 5.4e3;
-    }
-}
-
-double Ice_model::kappa_soil_fun(double x) {
-    double k1 = 3.6e3; // thermal conductivity over 0 degree
-    double k2 = 5.4e3; // thermal conductivity below -2 degree
-    double kappa_sp;
-    if (x > 0) {
-        kappa_sp = k1;
-    }
-    else if (x < -2) {
-        kappa_sp = k2;
-    }
-    else {
-        kappa_sp = (k2 - k1) * (3 * pow(x, 2) / 4 + pow(x, 3) / 4) + k1;
-    }
-
-    return kappa_sp;   
-}
-
-double Ice_model::kappa_fun_der(double x) {
-    double k1 = 3.6e3;
-    double k2 = 5.4e3;
-    double kappa_der;
-    if (x > 0) {
-        kappa_der = 0;
-    }
-    else if (x < -2) {
-        kappa_der = 0;
-    }
-    else {
-        kappa_der = (k2 - k1) * (3 * pow(x, 2) + 6 * x) / 4;
-    }
-
-    return kappa_der;
-}
-
-double Ice_model::kappa_gradient(double x) {
-    double Si = this->ice_sat_fun(x);
-    double kappa_g;
-    kappa_g = this->kappa_fun_der(x - 273.15) * pow(this->kappa_i, this->phi * Si) * pow(this->kappa_l, this->phi * (1 - Si)) + this->kappa_soil_fun(x - 273.15) * \
-     (pow(this->kappa_i, this->phi * Si) * log(this->kappa_i) * this->phi * pow(this->kappa_l, this->phi * (1 - Si)) - pow(this->kappa_i, this->phi * Si) * \
-     pow(this->kappa_l, this->phi * (1 - Si)) * log(this->kappa_l) * this->phi) * this->ice_sat_der(x);
-
-     return kappa_g;
 }
 
 int Ice_model::find_index(double xx) {
@@ -783,10 +737,10 @@ void Ice_model::cal_kappa() {
             this->kappa[j] = this->kappa_l;
         }
         else if (this->label[j] == 1){
-            this->kappa[j] = pow(this->kappa_s[j], 1 - this->phi) * pow(this->kappa_i, this->phi * Si[j]) * pow(this->kappa_l, this->phi * (1 - Si[j]));
+            this->kappa[j] = pow(this->kappa_s, 1 - this->phi) * pow(this->kappa_i, this->phi * Si[j]) * pow(this->kappa_l, this->phi * (1 - Si[j]));
         }
         else {
-            this->kappa[j] = this->kappa_s[j];
+            this->kappa[j] = this->kappa_s_bulk;
         }        
     }
 }
@@ -794,13 +748,13 @@ void Ice_model::cal_kappa() {
 void Ice_model::NablaT() {
     for (int i = 0; i < this->N; i++) {
         if (i == 0) {
-            this->nablaT[i] = (this->T[1] - this->T[0]) / this->dx;
+            this->nablaT[i] = (this->T[1] - this->T[0]) / this->dx[1];
         }
         else if (i < this->N - 1) {
-            this->nablaT[i] = (this->T[i + 1] - this->T[i - 1]) / (2 * this->dx);
+            this->nablaT[i] = (this->T[i + 1] - this->T[i - 1]) / (this->dx[i] + this->dx[i + 1]);
         }
         else {
-            this->nablaT[i] = (this->T[this->N - 1] - this->T[this->N - 2]) / this->dx;
+            this->nablaT[i] = (this->T[this->N - 1] - this->T[this->N - 2]) / this->dx[this->N - 1];
         }
         for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
             if ((i == this->idx_ub[j]) && (i == 0)) {
@@ -808,7 +762,7 @@ void Ice_model::NablaT() {
                 break;
             }
             else if (i == this->idx_ub[j]) {
-                this->nablaT[i] = (this->T_ub[j] - 273.15 - this->T[i - 1]) / (this->dx + this->x_ub[j] - this->x[i]);
+                this->nablaT[i] = (this->T_ub[j] - 273.15 - this->T[i - 1]) / (this->dx[i] + this->x_ub[j] - this->x[i]);
                 break;
             }
             else if ((i == this->idx_lb[j] + 1) && (i == this->N - 1)) {
@@ -816,7 +770,11 @@ void Ice_model::NablaT() {
                 break;
             }
             else if (i == this->idx_lb[j] + 1) {
-                this->nablaT[i] = (this->T[i + 1] + 273.15 - this->Tl[j]) / (this->x[i] - this->x_lb[j] + this->dx);
+                this->nablaT[i] = (this->T[i + 1] + 273.15 - this->Tl[j]) / (this->x[i] - this->x_lb[j] + this->dx[i + 1]);
+                break;
+            }
+            else if ((this->x[i] > this->x_ub[j]) && (this->x[i] < this->x_lb[j])) {
+                this->nablaT[i] = (this->Tl[j] - this->T_ub[j]) / (this->x_lb[j] - this->x_ub[j]);
                 break;
             }
         }
@@ -836,11 +794,6 @@ double Ice_model::ice_sat_fun(double x) {
     if (x < this->Tf) {
         return 1 - pow((this->Tm - this->Tf) / (this->Tm - x), 2);
     }
-    // else if (x < this->Tf + 1e-3) {
-    //     double si = 1 - pow((this->Tm - this->Tf) / (this->Tm - (this->Tf - 1e-3)), 2);
-    //     double R = (pow(si, 2) + pow(2e-3, 2)) / (2 * si);
-    //     return R - sqrt(pow(R, 2) - pow(x-(this->Tf + 1e-3), 2));
-    // }
     else {
         return 0;
     }
@@ -850,68 +803,37 @@ double Ice_model::ice_sat_der(double x) {
     if (x < this->Tf) {
         return 2 * pow(this->Tm - this->Tf, 2) * pow(x - this->Tm, -3);
     }
-    // else if (x < this->Tf + 1e-3) {
-    //     double si = 1 - pow((this->Tm - this->Tf) / (this->Tm - (this->Tf - 1e-3)), 2);
-    //     double R = (pow(si, 2) + pow(2e-3, 2)) / (2 * si);
-    //     return (x - (this->Tf + 1e-3)) / sqrt(pow(R, 2) - pow(x - (this->Tf + 1e-3), 2));
-    // }
     else {
         return 0;
     }
 }
 
 double Ice_model::FT_int(double x) {
-    // Calculate integral occurring in expression of FT
-    double integral = 0;
-    int N_temp = 20;
-    std::vector<double> x_temp(N_temp, 0);
-    for (int i = 0; i < N_temp; i++) {
-        x_temp[i] = x + i * (this->x0_active - x) / (N_temp - 1);
-    }
-    // int index = this->find_index(x);
-    for (int i = 0; i < N_temp - 1; i++) {
-        integral += (this->FT_int_fun(x_temp[i]) + this->FT_int_fun(x_temp[i + 1])) / 2 * (this->x0_active - x) / (N_temp - 1);
-    }
+
+    double integral;
+
+    integral = this->gauss(&Ice_model::FT_int_fun, x);
 
     return integral;
 }
 
 double Ice_model::FT_int_fun(double x) {
+
     double Tx; // temperature at x
     double nablaTx;
     int index = this->find_index(x);
-    if (this->idx_lb.empty()) {
-        Tx = this->T[index] + (x - index * this->dx) / this->dx * (this->T[index + 1] - this->T[index]) + 273.15;
-        nablaTx = this->nablaT[index] + (this->nablaT[index + 1] - this->nablaT[index]) * (x - index * this->dx) / this->dx;
-    }
-    else {
-        double nablaTl = (this->T[this->idx_lb[this->ice_active] + 1] + 273.15 - this->Tl[this->ice_active]) / (this->x[index + 1] - this->x_lb[this->ice_active]);
-        if (index == this->idx_lb[this->ice_active]) {
-            Tx = this->Tl[this->ice_active] + (x - this->x_lb[this->ice_active]) / (this->x[index + 1] - this->x_lb[this->ice_active]) * (this->T[index + 1] + 273.15 - this->Tl[this->ice_active]);
-            nablaTx = nablaTl + (this->nablaT[index + 1] - nablaTl) * (x - this->x_lb[this->ice_active]) / (this->x[index + 1] - this->x_lb[this->ice_active]);
-        }
-        else {
-            Tx = this->T[index] + (x - index * this->dx) / this->dx * (this->T[index + 1] - this->T[index]) + 273.15;
-            nablaTx = this->nablaT[index] + (this->nablaT[index + 1] - this->nablaT[index]) * (x - index * this->dx) / this->dx;
-        }
-    }
+
+    Tx = this->T[index] + (x - this->x[index]) / this->dx[index + 1] * (this->T[index + 1] - this->T[index]) + 273.15;
+    nablaTx = (this->T[index + 1] - this->T[index]) / this->dx[index + 1];
 
     return nablaTx * (1 - this->phi * this->ice_sat_fun(Tx));
 }
 
 double Ice_model::F_mu_int(double x) {
-    //Calculate the integral occurring in expression of F_mu
-    // int index = this->find_index(x);
-    double integral = 0;
-    int N_temp = 20;
-    std::vector<double> x_temp(N_temp, 0);
-    for (int i = 0; i < N_temp; i++) {
-        x_temp[i] = x + i * (this->x0_active - x) / (N_temp - 1);
-    }
-    
-    for (int i = 0; i < N_temp - 1; i++) {
-        integral += (this->F_mu_int_fun(x_temp[i]) + this->F_mu_int_fun(x_temp[i + 1])) / 2 * (this->x0_active - x) / (N_temp - 1);
-    }
+
+    double integral;
+
+    integral = this->gauss(&Ice_model::F_mu_int_fun, x);
 
     return integral;
 
@@ -920,10 +842,39 @@ double Ice_model::F_mu_int(double x) {
 double Ice_model::F_mu_int_fun(double x) {
     int index = this->find_index(x);
     double Tx;
-    Tx = this->T[index] + (x - index * this->dx) / this->dx * (this->T[index + 1] - this->T[index]) + 273.15;   
+    Tx = this->T[index] + (x - this->x[index]) / this->dx[index + 1] * (this->T[index + 1] - this->T[index]) + 273.15;   
     double Si_x = this->ice_sat_fun(Tx);
-    double kx = this->k0 * pow(1 - Si_x, 2);
-    return pow(1 - this->phi * Si_x, 2) / kx;
+    double kx_si = pow(1 - Si_x, 2);
+    return pow(1 - this->phi * Si_x, 2) / kx_si;
+}
+
+double Ice_model::vl_fun() {
+    if (this->ice_active == 1e6) {
+        return 0;
+    }
+    if (this->Tl[this->ice_active] > this->Tf) {
+        double alpha_p = this->Rp / this->R;
+        double pf = this->gamma_sl * 2 / this->Rp;
+        double lambda = 1e-8;
+        double theta_l = (this->Tm - this->Tl[this->ice_active]) / (this->Tm - this->Tf);
+        double theta_c = asin((1 + alpha_p) / (1 + alpha_p / theta_l));
+        double f_theta_c = 4 * (1 - pow(cos(theta_c), 3)) - 3 * cos(theta_c) * (1 - cos(2 * theta_c));
+        double d_p3 = pow(lambda, -3) * ((this->Tm - this->Tl[this->ice_active]) / this->Tm + alpha_p * pf / this->rho_i / this->L);
+        double h = this->x_dry - this->x_lb[this->ice_active];
+
+        if ((this->Tl[this->ice_active] > this->Tm) || (this->Tl[this->ice_active] == this->Tm)) {
+            return 0;
+        }
+        else {
+            // // Robert's solution
+            // return (this->rho_i * this->L / this->Tm * (this->Tm - this->Tl[this->ice_active]) + p0) / (1.5 * (1 - this->phi) * 40 * this->mu * pow(this->R, 2) * d_p3 + this->mu * this->x_dry / this->k0);
+            // Alan's solution
+            return this->rho_i * this->L / this->Tm * (this->Tm - this->Tl[this->ice_active]) / (this->mu * pow(this->R, 2) * d_p3 * f_theta_c + this->mu * h / this->k0);
+        }
+    }
+    else {
+        return this->rho_i * this->L / this->Tm * this->FT_int(this->x_lb[this->ice_active]) / this->mu / this->F_mu_int(this->x_lb[this->ice_active]) * this->k0;
+    }
 }
 
 int Ice_model::ice_lens_active() {
@@ -932,7 +883,7 @@ int Ice_model::ice_lens_active() {
     bool full_ice = false;
 
     for (int i = 0; i < static_cast<int>(this->x_lb.size()); i++) {
-        if ((this->crack_state[i] == 0) || ((this->crack_state[i] == 1) && (this->Tl[i] < this->Tm))) {
+        if (this->crack_state[i] == 0) {
             idx = i;
             full_ice = true;
         }
@@ -950,4 +901,43 @@ int Ice_model::ice_lens_active() {
     }
 
     return idx;
+}
+
+void Ice_model::update_grid() {
+    for (int i = 0; i < this->N; i++) {
+        double delta_above = 0;
+        if ((this->label[i] == 2) || (this->label[i] == 3)) {
+            for (int k = 0; k < static_cast<int>(this->x_lb.size()); k++) {
+                if (this->x_lb[k] < this->x[i]) {
+                    delta_above += (this->x_lb[k] - this->x_ub[k]);
+                }
+                else if ((this->x_ub[k] < this->x[i]) && (this->x_lb[k] > this->x[i])) {
+                    delta_above += (this->x[i] - this->x_ub[k]);
+                }
+            }
+        }
+        else {
+            for (int j = 0; j < static_cast<int>(this->x_lb.size()); j++) {
+                if (this->x_ub[j] < this->x[i]) {
+                    delta_above += (this->x_lb[j] - this->x_ub[j]);
+                }
+            }
+        }
+        this->x[i] = this->x_0[i] + delta_above;
+    }
+    for (int l = 1; l < this->N; l++) {
+        this->dx[l] = this->x[l] - this->x[l - 1];
+    }
+}
+
+double Ice_model::gauss(double (Ice_model::*f)(double x), double a) {
+    // four-point Gauss quadrature
+    double integral;
+    double x1 = (a + this->x0_active) / 2 - (this->x0_active - a) / 2 * 0.861136;
+    double x2 = (a + this->x0_active) / 2 - (this->x0_active - a) / 2 * 0.339981;
+    double x3 = (a + this->x0_active) / 2 + (this->x0_active - a) / 2 * 0.339981;
+    double x4 = (a + this->x0_active) / 2 + (this->x0_active - a) / 2 * 0.861136;
+    integral = ((this->*f)(x1) * 0.347855 + (this->*f)(x2) * 0.652145 + (this->*f)(x3) * 0.652145 + (this->*f)(x4) * 0.347855) * (this->x0_active - a) / 2;
+
+    return integral;
 }

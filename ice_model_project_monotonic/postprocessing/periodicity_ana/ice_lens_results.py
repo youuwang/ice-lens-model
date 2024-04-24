@@ -52,8 +52,9 @@ def ice_lens(par):
 X = []
 n1 = 20
 n2 = 20
-x1 = np.linspace(0.5, 1, num = n2)
-x2 = np.linspace(-5, -1, num = n1)
+x1 = np.linspace(1, 5, num = n2)
+x2 = np.linspace(-10, -1, num = n1)
+
 for i in range(n2):
     for j in range(n1):
         X.append([x1[i], x2[j]])

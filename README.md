@@ -77,7 +77,7 @@ python3 sen_ana.py
 
 The two Python files above are also included in the **postprocessing** folder. Typical results for senstivity analysis look like:
 
-<img src="N_lens_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
+<img src="N_delta_Sobol_tot.png" alt="Total Sobol' index for number of ice lenses" width="300" height="200">
 
 Note that the Sobol' index is calculated from Polynomial Chaos Expansion (PCE) as a metamodel of the original model. Thus, PCE needs to be validated by the histograms or Y-Y plots of true model responses and PCE predictions, which can also be done in **sen_ana.py**.
 

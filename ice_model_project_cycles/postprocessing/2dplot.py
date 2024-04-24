@@ -9,6 +9,7 @@ f = open('results/label_time.dat', 'r')
 g = open('t_xf2.dat', 'r')
 h = open('t1.dat', 'r')
 l = open('t_dry.dat', 'r')
+u = open('results/x_time.dat', 'r')
 
 a1 = a.readlines()
 b1 = b.readlines()
@@ -18,6 +19,7 @@ f1 = f.readlines()
 g1 = g.readlines()
 h1 = h.readlines()
 l1 = l.readlines()
+u1 = u.readlines()
 
 del a
 del b
@@ -27,6 +29,7 @@ del f
 del g
 del h
 del l
+del u
 
 time3 = []
 time2 = []
@@ -40,6 +43,7 @@ x_lb = []
 T = []
 label_t = []
 x_dry = []
+x_time = []
 
 for k in range(len(a1)):
     lines_a = a1[k].split()
@@ -78,6 +82,11 @@ for r in range(len(l1)):
     lines_l = l1[r].split()
     x_dry.append(float(lines_l[1]))
 
+for s in range(len(u1)):
+    lines_u = u1[s].split()
+    lines_u = [float(y) for y in lines_u]
+    x_time.append(lines_u)
+
 time3 = np.array(time3)
 time2 = np.array(time2)
 time1 = np.array(time1)
@@ -97,9 +106,10 @@ x = np.linspace(0, 1, num = 601)
 # 2d plot
 fig = pl.figure()
 ax = fig.add_subplot(111)
+width = 8
 
 for k in range(len(time1)):
-    ax.plot(x, time1[k] * np.ones(len(x)), color = 'k')
+    ax.plot(time1[k] * np.ones(len(x)), x, linewidth = width, color = '0.5')
 
 if len(time2) > 0:
     for i in range(len(time2)):
@@ -112,11 +122,11 @@ if len(time2) > 0:
 
         time_t = time2[i] * np.ones(len(xt))
         index = np.where(np.isclose(Tt, Tf))[0][0]
-        ax.plot(xt, time_t, color = 'k')
-        ax.plot(xt[:index], time_t[:index], color = 'g')
+        ax.plot(time_t, xt, linewidth = width, color = '0.5')
+        ax.plot(time_t[:index], xt[:index], linewidth = width, color = 'g')
 
 for m in range(len(time3)):
-    xt = x
+    xt = x_time[m]
     Tt = T3[m]
     label_time = label_t[m]
 
@@ -184,52 +194,59 @@ for m in range(len(time3)):
 
     for n in range(len(xt) - 1):
         if (label_time[n] == 1) & (Tt[n] < Tf):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'g')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'g')
         elif label_time[n] == 2:
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
         elif label_time[n] == 3:
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'r')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'r')
         elif (label_time[n] == 11) & (Tt[n+1] < Tf) & ((label_time[n+1] == 1) | (label_time[n+1] == 21) | (label_time[n+1] == 31)):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'g')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'g')
         elif (label_time[n] == 11) & (label_time[n+1] == 2):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
         elif (label_time[n] == 11) & (label_time[n+1] == 20):
             if n < len(xt) - 2:
                 if (label_time[n+2] == 3) | ((label_time[n+2] == 32) | (label_time[n+2] == 22)):
-                    ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+                    ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
                 else:
-                    ax.plot(xt[n:n+2], time_t[n:n+2], color = 'k')
+                    ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = '0.5')
         elif (label_time[n] == 11) & (label_time[n+1] == 22):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
         elif (label_time[n] == 20) & ((label_time[n+1] == 2) | (label_time[n+1] == 22)):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
         elif (label_time[n] == 20) & (label_time[n+1] == 11):
             if n < len(xt) - 2:
                 if (label_time[n+2] == 2) | (label_time[n+2] == 22):
-                    ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+                    ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
                 else:
-                    ax.plot(xt[n:n+2], time_t[n:n+2], color = 'k')
+                    ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = '0.5')
         elif (label_time[n] == 20) & ((label_time[n+1] == 3) | (label_time[n+1] == 32)):
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'r')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'r')
         elif label_time[n] == 21:
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'b')
+            if (Tt[n + 1] > 0):
+                ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'r')
+            else:
+                ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'b')
         elif label_time[n] == 22:
             if Tt[n] < Tf:
-                ax.plot(xt[n:n+2], time_t[n:n+2], color = 'g')
+                ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'g')
             else:
-                ax.plot(xt[n:n+2], time_t[n:n+2], color = 'k')
+                ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = '0.5')
         elif label_time[n] == 31:
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'r')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = 'r')
         else:
-            ax.plot(xt[n:n+2], time_t[n:n+2], color = 'k')
+            ax.plot(time_t[n:n+2], xt[n:n+2], linewidth = width, color = '0.5')
     
     dry_idx = np.where((xt > x_dry[m]) | (xt == x_dry[m]))[0]
-    ax.plot(xt[dry_idx], time_t[dry_idx], linewidth = 2, color = 'yellow')
+    ax.plot(time_t[dry_idx], xt[dry_idx], linewidth = width, color = 'yellow')
 
-ax.set_xlabel('Depth (m)', fontsize = 50)
-ax.set_ylabel('Time (h)', fontsize = 50)
-ax.tick_params(axis='both', labelsize=50)
-ticks = [0, 12, 24, 36, 48, 60, 72]
-ax.set_yticks(ticks)
+ax.set_ylabel('Depth (m)', fontsize = 60, labelpad = 20)
+ax.set_xlabel('Time (h)', fontsize = 60, labelpad = 20)
+ax.tick_params(axis='both', labelsize=60, pad=20)
+# ax.set_ylim(0, 0.4)
+# ax.set_xlim(30, 20)
+# ax.set_yticks([0, 0.1, 0.2, 0.3, 0.4])
+
+pl.gca().set_aspect(10/0.4, adjustable='box')
+pl.subplots_adjust(top = 0.95, bottom = 0.2)
 
 pl.show()

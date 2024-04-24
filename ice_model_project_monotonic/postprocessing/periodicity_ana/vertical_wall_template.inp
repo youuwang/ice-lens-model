@@ -1,5 +1,5 @@
 $section material
-$mat_prop 2.5e3 800 0.2 2e5 1e-15 1e-6 # density(kg/m3) specific_heat_capacity(J/kgK) porosity cohesion(Pa) permeability_at_saturation(m2) characteristic_pore_throat_size(m)
+$mat_prop 2.7e3 800 0.2 2e6 1e-13 1e-6 5e-4 # density(kg/m3) specific_heat_capacity(J/kgK) porosity cohesion(Pa) permeability_at_saturation(m2) characteristic_pore_throat_size(m)
 $section end
 
 $section nodes
@@ -12,7 +12,7 @@ $section end
 
 
 $section initial_condition
-$temperature ${T_out_ini} 3 # initial temperature for the structure (degree Celsius)
+$temperature ${T_out_ini} 10 # initial temperature for the structure (degree Celsius)
 $section end
 
 $section BC

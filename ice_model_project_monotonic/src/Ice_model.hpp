@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <sstream>
+#include <numeric>
 
 using namespace std;
 
@@ -26,16 +27,18 @@ public:
         read_input(filename);
         this->out_dir = odir;
         this->Tf = this->Tm - 2 * this->gamma_sl * this->Tm / this->rho_i / this->L / this->Rp;
-        this->dx = this->d / (this->N - 1);
-        this->dt = pow(dx, 2);
+        this->dx.assign(this->N, this->d / (this->N - 1));
+        this->dx[0] = 0;
+        this->dt = pow(this->d / (this->N - 1), 2);
         this->rho_c_eff.assign(this->N, 0);
         this->nablaT.assign(this->N, 0);
-        this->kappa_s.assign(this->N, 0);
         this->kappa.assign(this->N, 0);
         this->label.assign(this->N, 1);
-        for (int i = 0; i < this->N; i++) {
-            this->x.push_back(i * this->dx);
-        }
+        this->x_0.assign(this->N, 0);
+
+        std::partial_sum(this->dx.begin(), this->dx.end(), this->x_0.begin());
+        this->x = this->x_0;
+
         for (int i = 0; i < this->N; i++) {
             this->T.push_back(this->T01 + (this->T02 - this->T01) / this->d * this->x[i]);
         }
@@ -43,6 +46,12 @@ public:
         this->time = 0;
         this->time_output = 0;
         this->x_dry = this->d;
+        this->mu = 5e-7 / this->time_sf;
+        this->kappa_i = 7.92e3 * this->time_sf;
+        this->kappa_l = 2.052e3 * this->time_sf;
+        this->kappa_air = 0.05 * this->time_sf;
+        this->kappa_s = 2.16e4 * this->time_sf;
+        this->kappa_s_bulk = pow(this->kappa_air, this->phi) * pow(this->kappa_s, 1 - this->phi);
     };
     ~Ice_model() = default;
 
@@ -51,7 +60,7 @@ public:
   /* ------------------------------------------------------------------------ */  
 public:
     //! Solve temperature profile and output results
-    void solve(ofstream& output_T, ofstream& output_ice_lens);
+    void solve(ofstream& output_T, ofstream& output_ice_lens, ofstream& x_time);
 
     //!read input from .inp file
     void read_input(std::string filename); //read input from .inp file
@@ -61,6 +70,9 @@ public:
 
     //! Calculate temperature gradient at each node
     void NablaT();
+
+    //! Gaussian quadrature
+    double gauss(double (Ice_model::*f)(double x), double a);
 
   /* ------------------------------------------------------------------------ */
   /* Friend classes                                                           */
@@ -96,6 +108,8 @@ protected:
     double phi;
     //! Characteristic pore throat size (m)
     double Rp;
+    //! Grain size (m)
+    double R;
     //! Length of the rod (m)
     double d;
     //! Number of grid points
@@ -111,11 +125,13 @@ protected:
     //! periodicity of cooling 
     double v_cd;
     //! grid size 
-    double dx;
+    std::vector<double> dx;
     //! time step size
     double dt;
     //! Store coordinates for grid points
     std::vector<double> x;
+    //! Store initial coordinates for grid points
+    std::vector<double> x_0;
     //! Store the node temperature
     std::vector<double> T;
     //! store rho_c_eff at each node
@@ -123,7 +139,9 @@ protected:
     //! Thermal conductivity (w/mK)
     std::vector<double> kappa;
     //! Thermal conductivity of soil particles (w/mK)
-    std::vector<double> kappa_s;
+    double kappa_s;
+    //! Kappa of bulk sandstone
+    double kappa_s_bulk;
     //! Current position of 0 degree Celsius
     double x0;
     //! Temperature gradient at grid points
@@ -155,6 +173,15 @@ protected:
     double time;
     //! indicator for output
     double time_output;
+    //! Dynamic viscosity of water (Pa h)
+    double mu;
+    //! Thermal conductivity of ice (w/mK)
+    double kappa_i;
+    //! Thermal conductivity of liquid water
+    double kappa_l;
+    //! Thermal conductivity of air
+    double kappa_air;
+
     //! vector of time
     std::vector<double> time_t1;
     std::vector<double> time_t2;
@@ -173,6 +200,8 @@ protected:
     std::vector<double> xf_t2;
     //! vector for xf in phase 3
     std::vector<double> xf_t3;
+    //! vector for x in phase 3
+    std::vector<double> x_t3;
     //! vector for x_dry
     std::vector<double> x_dry_t;
     //! Index for the element where frozen fringe boundary is located
@@ -196,16 +225,12 @@ protected:
     const double rho_l = 1e3;
     //! Bulk melting temperature for water (K)
     const double Tm = 273.15;
-    //! Dynamic viscosity of water (Pa h)
-    const double mu = 5e-7;
     //! Specific heat capacity of water (J/KgK)
     const double cp_l = 4.182e3;
     //! Specific heat capacity of ice (J/KgK)
     const double cp_i = 2.108e3;
-    //! Thermal conductivity of ice (w/mK)
-    const double kappa_i = 7.92e3;
-    //! Thermal conductivity of liquid water
-    const double kappa_l = 2.052e3;
+    //! time scaling factor
+    const double time_sf = 1;
 
 protected:
     //! solve function for phase 1 (only liquid and soil particles)
@@ -213,15 +238,7 @@ protected:
     //! solve function for phase 2 (saturated soil and frozen fringe)
     void solve2(ofstream& output_T);
     //! solve function for phase 3 (ice lens involved following phase 2)
-    void solve3(ofstream& output_T);
-    //! calculate kappa of soil under different temperatures
-    void kappa_soil();
-    //! function to calculate kappa of soil particles
-    double kappa_soil_fun(double x);
-    //! calculate derivative of kappa_soil_fun()
-    double kappa_fun_der(double x);
-    //! calculate kappa gradient in frozen fringe
-    double kappa_gradient(double x);
+    void solve3(ofstream& output_T, ofstream& x_time);
     //! calculate rho_c_eff for each element
     void cal_rho_c_eff();
     //! calculate kappa for each node
@@ -240,6 +257,10 @@ protected:
     double ice_sat_fun(double x);
     //! take derivative of ice saturation function
     double ice_sat_der(double x);
+    //! calculate vl
+    double vl_fun();
+    //! update grid
+    void update_grid();
 
 
 };

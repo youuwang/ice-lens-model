@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../src/Ice_model.hpp
+iostream
+-
+fstream
+-
+cmath
+-
+string
+-
+vector
+-
+memory
+-
+sstream
+-
+
+/home/youwang/Desktop/C++ project/ice lens model_CMBM/ice-lens-model/ice_model_project_monotonic/example/example.cpp
+iostream
+-
+chrono
+-
+fstream
+-
+Ice_model.hpp
+/home/youwang/Desktop/C++ project/ice lens model_CMBM/ice-lens-model/ice_model_project_monotonic/example/Ice_model.hpp
+cstdio
+-
+

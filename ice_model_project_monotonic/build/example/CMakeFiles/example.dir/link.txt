@@ -1,0 +1,1 @@
+/usr/bin/c++  -Wall -Wextra -pedantic -std=c++17   -rdynamic CMakeFiles/example.dir/example.cpp.o  -o example  -Wl,-rpath,"/home/youwang/Desktop/C++ project/ice lens model_CMBM/ice-lens-model/ice_model_project_monotonic/build/src" ../src/libice_model.so 

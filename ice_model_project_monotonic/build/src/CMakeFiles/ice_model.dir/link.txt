@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -Wall -Wextra -pedantic -std=c++17   -shared -Wl,-soname,libice_model.so -o libice_model.so CMakeFiles/ice_model.dir/FDM_solver.cpp.o CMakeFiles/ice_model.dir/FDM_ff.cpp.o CMakeFiles/ice_model.dir/FDM_icelens.cpp.o CMakeFiles/ice_model.dir/Ice_model.cpp.o 

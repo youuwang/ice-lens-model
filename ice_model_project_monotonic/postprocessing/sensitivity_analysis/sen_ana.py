@@ -4,6 +4,34 @@
 import os
 import numpy as np
 import matplotlib.pyplot as pl
+from brokenaxes import brokenaxes
+
+# delta_tot = [0.272142, 0.294890, 0.273505, 0.737114, 0.324086]
+# lens_N = [0.080127, 0.951589, 0.074983, 0.098141, 0.092248]
+# b = [r'$\phi$', r'$f_c$', r'$k_{l,sat}$', r'$r_p$', r'R']
+# x = 0.3 * np.arange(len(b))
+# width = 0.1
+# x1 = [y + width for y in x]
+# pl.bar(x, lens_N, color = 'm', width = width)
+
+# pl.bar(x1, delta_tot, color = 'darkorange', width = width)
+# pl.xlabel('Material parameters', fontsize = 70)
+# pl.ylabel('Total Sobol\' indices', fontsize = 70)
+# pl.xticks([val + width / 2 for val in x], b)
+# pl.tick_params(axis='both', which='both', labelsize=70, pad = 10)
+# pl.legend([r'$N$', r'$\Delta_{tot}$'], frameon=False, loc="upper left", fontsize=70)
+# pl.ylim(0, 1)
+# ax = pl.gca()
+# ax.spines['right'].set_linewidth(2)
+# ax.spines['top'].set_linewidth(2)
+# ax.spines['left'].set_linewidth(2)
+# ax.spines['bottom'].set_linewidth(2)
+
+# pl.subplots_adjust(bottom = 0.17)
+
+# pl.show()
+
+
 from uqpylab import sessions, display_util
 
 display_util.load_plt_defaults()
@@ -14,33 +42,6 @@ uq = mysession.cli
 # Reset the session
 mysession.reset()
 uq.rng(101,'twister')
-
-## read parameters from input file
-# def read_parameters(file_path):
-#     parameters = {}
-
-#     with open(file_path, 'r') as file:
-#         current_section = None
-
-#         for line in file:
-#             line = line.strip()
-
-#             if line.startswith('$section'):
-#                 _, current_section = line.split(' ', 1)
-#                 current_section = current_section.strip()
-#                 continue
-
-#             if line.startswith('$'):
-#                 # Extract values associated with the parameter
-#                 _, *param_values = line.split()
-#                 parameters.setdefault(current_section, []).extend(param_values)
-
-#     return parameters
-
-# file_path = 'input/vertical_wall_0.15_203149.99_-14.07_-5.69.inp'  # Replace with the actual path to your file
-# parameters = read_parameters(file_path)
-
-# X = [float(x) for x in parameters['material'][2:6]]
 
 items = os.listdir('results')
 sub_folder = [item for item in items if os.path.isdir(os.path.join('results', item))]
@@ -54,6 +55,7 @@ for folder in sub_folder:
     parameter_temp = [float(x) for x in parameter_list]
     parameter_temp[2] = 10 ** parameter_temp[2]
     parameter_temp[3] = 10 ** parameter_temp[3]
+    parameter_temp[4] = 10 ** parameter_temp[4]
     parameters.append(parameter_temp)
     
     a = open("results/" + folder + "/ub_lb_t.dat", 'r')
@@ -73,7 +75,6 @@ for folder in sub_folder:
     x_ub = []
     x_lb = []
     delta = []
-    spacing_temp = []
     for i in range(-N_lens, 0):
         lines = a1[i].split()
         x_ub.append(float(lines[0]))
@@ -81,10 +82,10 @@ for folder in sub_folder:
     for j in range(len(x_ub)):
         delta.append(x_lb[j] - x_ub[j])
     delta_tot.append(sum(delta))
-
+# print(lens_N)
 
 # spacing = 1000 * np.array(spacing, ndmin = 2).T
-delta_tot = 1000 * np.array(delta_tot, ndmin = 2).T
+delta_tot = 1e4 * np.array(delta_tot, ndmin = 2).T
 parameters = np.array(parameters, ndmin = 2)
 
 InputOpts = {
@@ -95,24 +96,28 @@ InputOpts = {
         'Parameters': [0.15, 0.25]
         },
         {'Name': 'cohesion', # cohesion
-        'Type': 'Uniform',
-        'Parameters': [2e5, 3e5]
+        'Type': 'Lognormal',
+        'Moments': [3e6, 5.5e5]
         },        
         {
         'Name': 'permeability at saturation', # permeability at saturated condition
         'Type': 'Uniform',
-        'Parameters': [1e-17, 1e-14]
+        'Parameters': [1e-14, 1e-13]
         },
         {'Name': 'pore size', # pore size
         'Type': 'Uniform',
         'Parameters': [1e-6, 1e-5]
+        },
+        {'Name': 'grain size', # grain size
+        'Type': 'Uniform',
+        'Parameters': [1e-4, 8e-4]
         }]
 }
 
 myInput = uq.createInput(InputOpts)
 
 
-PCEOpts = {
+PCEOpts_N = {
     # Select the 'metamodel tool' in UQ[py]Lab
     'Type': 'Metamodel',
     # Choose the Polynomial Chaos Expansion module
@@ -120,43 +125,132 @@ PCEOpts = {
     # PCE requires an input to be defined
     'Input': myInput['Name']
 }
-PCEOpts['Degree'] = np.arange(1, 15).tolist()
-PCEOpts['ExpDesign'] = {
+PCEOpts_N['Degree'] = np.arange(1, 15).tolist()
+PCEOpts_N['ExpDesign'] = {
+    'X': parameters.tolist(),
+    'Y': np.log(lens_N).tolist()
+}
+PCEOpts_N["Method"] = "OMP"
+# Calculate the PCE coefficients
+myPCE_N = uq.createModel(PCEOpts_N)
+
+
+PCEOpts_delta = {
+    # Select the 'metamodel tool' in UQ[py]Lab
+    'Type': 'Metamodel',
+    # Choose the Polynomial Chaos Expansion module
+    'MetaType': 'PCE',
+    # PCE requires an input to be defined
+    'Input': myInput['Name']
+}
+PCEOpts_delta['Degree'] = np.arange(1, 15).tolist()
+PCEOpts_delta['ExpDesign'] = {
     'X': parameters.tolist(),
     'Y': np.log(delta_tot).tolist()
 }
-PCEOpts["Method"] = "OMP"
+PCEOpts_delta["Method"] = "OMP"
 # Calculate the PCE coefficients
-myPCE = uq.createModel(PCEOpts)
-# uq.print(myPCE)
-
+myPCE_delta = uq.createModel(PCEOpts_delta)
 
 # # histogram plot
-# fig = pl.figure()
-# ax = fig.add_subplot(111)
-# y_PCE = uq.evalModel(myPCE, parameters)
-# y_PCE = np.exp(y_PCE)
-# pl.hist(y_PCE, 20, color = uq_colors[0], alpha = 0.8)
-# pl.hist(lens_N, 20, color = uq_colors[1], alpha = 0.8)
-# legend_text = ['PCE prediction', 'True model response']
-# pl.legend(legend_text, frameon=False, loc="best", fontsize=20)
-# ax.set_xlabel('Number of ice lenses', fontsize=20)
-# ax.set_ylabel('Counts', fontsize=20)
-# ax.tick_params(axis='both', labelsize=20)
-# pl.ylim(0, 100)
-# # pl.ylim(0, 40)
+# y_PCE_N = uq.evalModel(myPCE_N, parameters)
+# y_PCE_delta = uq.evalModel(myPCE_delta, parameters)
+
+# y_PCE_N = np.exp(y_PCE_N)
+# y_PCE_delta = np.exp(y_PCE_delta)
+
+# # fig = pl.figure()
+# # ax = fig.add_subplot(111)
+# # ax.hist(y_PCE_N, 10, color = uq_colors[0], histtype = 'step',linewidth=4, label = r'PCE prediction of $N$')
+# # ax.hist(lens_N, 10, color = uq_colors[1], label = r'True model response of $N$')
+# # # ax.hist(y_PCE_delta, 20, color = uq_colors[5], histtype = 'step', linewidth=2, label = r'PCE prediction of $\Delta_{tot}$ (mm)')
+# # # ax.hist(delta_tot, 20, color = uq_colors[4], label = r'True model response of $\Delta_{tot}$ (mm)')
+# # ax.legend(fontsize = 30, frameon = False, loc = 'best')
+# # ax.set_xlabel(r'$N$ or $\Delta_{tot}$', fontsize=35, labelpad = 20)
+# # ax.set_ylabel('Counts', fontsize=35, labelpad = 20)
+# # ax.spines['top'].set_linewidth(1)
+# # ax.spines['right'].set_linewidth(1)
+# # ax.spines['bottom'].set_linewidth(1)
+# # ax.spines['left'].set_linewidth(1)
+# # pl.subplots_adjust(top = 0.95, bottom = 0.17)
+# # ax.grid(False)
+
+# # pl.show()
+
+
+# bax = brokenaxes(
+#     ylims=[(0, 100), (200, 300)], 
+#     xlims = [(0, 4), (7, 9)],
+#     hspace=0.2, 
+#     wspace = 0.2,
+#     despine = False)
+
+# bax.hist(y_PCE_N, 10, color = uq_colors[0], histtype = 'step',linewidth=4, label = r'PCE prediction of $N$')
+
+# bax.hist(lens_N, 10, color = uq_colors[1], label = r'True model response of $N$')
+
+# bax.hist(y_PCE_delta, 20, color = uq_colors[5], histtype = 'step', linewidth=4, label = r'PCE prediction of $\Delta_{tot}$ (mm)')
+# bax.hist(delta_tot, 20, color = uq_colors[4], label = r'True model response of $\Delta_{tot}$ (mm)')
+# bax.legend(fontsize = 30, frameon = False, loc = 'best')
+
+# bax.set_xlabel(r'$N$ or $\Delta_{tot}$', fontsize=35, labelpad = 35)
+# bax.set_ylabel('Counts', fontsize=35, labelpad = 80)
+
+# bax.first_col[0].set_yticks([200, 300])
+# bax.first_col[1].set_yticks([0, 50, 100])
+# bax.first_col[0].tick_params(labelsize = 35)
+# bax.first_col[1].tick_params(labelsize = 35)
+
+# bax.last_row[0].set_xticks([0, 4])
+# bax.last_row[1].set_xticks([7, 9])
+# bax.last_row[0].tick_params(labelsize = 35)
+# bax.last_row[1].tick_params(labelsize = 35)
+
+# for ax in bax.axs:
+#     ax.spines['top'].set_linewidth(1)
+#     ax.spines['right'].set_linewidth(1)
+#     ax.spines['bottom'].set_linewidth(1)
+#     ax.spines['left'].set_linewidth(1)
+
+# pl.subplots_adjust(top = 0.95, bottom = 0.17)
+# # pl.tight_layout()
+
+# for handle in bax.diag_handles:
+#     handle.remove()
+# bax.draw_diags()
+
+# for ax in bax.axs:
+#     ax.grid(False)
+
+
 # pl.show()
 
 # Y-Y plot
-y_PCE = uq.evalModel(myPCE, parameters)
-y_PCE = np.exp(y_PCE)
-pl.scatter(delta_tot, y_PCE, marker = 'o', color = uq_colors[0], alpha = 0.8, s = 10)
-pl.plot([0, 250], [0, 250], color = uq_colors[1], alpha = 0.8)
-pl.xlabel('$Y_{true}$',fontsize=20)
-pl.ylabel('$Y_{PC}$',fontsize=20)
-pl.tick_params(axis='both', which='both', labelsize=20)
-pl.text(0, 250, 'Total thickness of ice lenses (mm)', fontsize=20, color='black')
+y_PCE_N = uq.evalModel(myPCE_N, parameters)
+y_PCE_N = np.exp(y_PCE_N)
+y_PCE_delta = uq.evalModel(myPCE_delta, parameters)
+y_PCE_delta = np.exp(y_PCE_delta)
+
+pl.plot([0, 18], [0, 18], color = 'k', linewidth = 2)
+pl.scatter(lens_N, y_PCE_N, marker = 'o', color = uq_colors[1], s = 80)
+
+pl.scatter(delta_tot, y_PCE_delta, marker = 'o', color = uq_colors[4], s = 80)
+
+pl.xlabel('$Y_{true}$',fontsize=35)
+pl.ylabel('$Y_{PC}$',fontsize=35)
+legend_text = [r'$Y_{PC} = Y_{true}$', r'$N$', r'$\Delta_{tot}$ (mm)']
+pl.legend(legend_text, frameon=False, loc="best", fontsize=35)
+pl.tick_params(axis='both', which='both', labelsize=35)
 pl.grid(False)
+pl.subplots_adjust(top = 0.95, bottom = 0.25)
+
+ax = pl.gca()
+ax.set_xticks([0, 3, 6, 9, 12, 15, 18])
+ax.set_yticks([0, 6, 12, 18])
+ax.spines['right'].set_linewidth(1)
+ax.spines['top'].set_linewidth(1)
+ax.spines['left'].set_linewidth(1)
+ax.spines['bottom'].set_linewidth(1)
 pl.show()
 
 # # Sensitivity analysis (Sobol indices)
@@ -172,4 +266,10 @@ pl.show()
 
 # uq.display(PCESobolAnalysis)
 # uq.print(PCESobolAnalysis)
+
+
+
+
+
+
 

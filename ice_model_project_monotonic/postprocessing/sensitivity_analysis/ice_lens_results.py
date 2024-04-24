@@ -28,7 +28,7 @@ if os.path.exists(input_dir):
 os.mkdir(result_dir)
 os.mkdir(input_dir)
 
-pars = ['${porosity}', '${cohesion}', '${kl_eff}', '${pore_size}']
+pars = ['${porosity}', '${cohesion}', '${kl_eff}', '${pore_size}', '${grain_size}']
 
 def ice_lens(par):
 
@@ -44,7 +44,7 @@ def ice_lens(par):
         for i in range(len(par1)):
             input_file = input_file.replace(pars[i], '{}'.format(par1[i]))
         
-        input_path = input_dir + "/vertical_wall_{:.2f}_{:.2f}_{:.2f}_{:.2f}.inp".format(par1[0], par1[1], math.log10(par1[2]), math.log10(par1[3]))
+        input_path = input_dir + "/vertical_wall_{:.2f}_{:.2f}_{:.2f}_{:.2f}_{:.2f}.inp".format(par1[0], par1[1], math.log10(par1[2]), math.log10(par1[3]), math.log10(par1[4]))
         rw.write_file(input_path, input_file)
         result_folder = result_dir + input_path[5:-4]
         if not os.path.exists(result_folder):
@@ -65,23 +65,29 @@ InputOpts = {
         'Parameters': [0.15, 0.25]
         },
         {'Name': 'cohesion', # cohesion
-        'Type': 'Uniform',
-        'Parameters': [2e5, 3e5]
-        },        
+        'Type': 'Lognormal',
+        'Moments': [3e6, 5.5e5]
+        },       
         {
         'Name': 'permeability at saturation', # permeability at saturated condition
         'Type': 'Uniform',
-        'Parameters': [1e-17, 1e-14]
+        'Parameters': [1e-14, 1e-13]
         },
         {'Name': 'pore size', # pore size
         'Type': 'Uniform',
         'Parameters': [1e-6, 1e-5]
-        }]
+        },
+        {'Name': 'grain size', # grain size
+        'Type': 'Uniform',
+        'Parameters': [1e-4, 8e-4]
+        }
+        ]
 }
 
 myInput = uq.createInput(InputOpts)
 
-X = uq.getSample(N = 300, Method = 'LHS')
+X = uq.getSample(N = 400, Method = 'LHS')
+
 start = time.time()
 ice_lens(X)
 end = time.time()
